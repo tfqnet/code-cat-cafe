@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code Cat Café</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect x='2' y='4' width='12' height='10' rx='3' fill='%23F0A055'/><rect x='3' y='2' width='3' height='4' fill='%23F0A055'/><rect x='10' y='2' width='3' height='4' fill='%23F0A055'/><rect x='5' y='8' width='2' height='2' fill='%233A2A20'/><rect x='9' y='8' width='2' height='2' fill='%233A2A20'/></svg>" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="top">
+        <div>
+          <h1>Code Cat Café</h1>
+          <p class="sub">Your Claude Code agents, as cats.</p>
+        </div>
+        <div class="controls">
+          <span id="mode" class="badge">Connecting…</span>
+          <button id="sound" class="btn" type="button" aria-pressed="false">🔕 Sound</button>
+        </div>
+      </header>
+
+      <section class="stage card">
+        <canvas id="cafe" aria-label="Animated cat café showing what each Claude Code agent is doing"></canvas>
+        <p id="status" class="status" aria-live="polite">Opening the café…</p>
+      </section>
+
+      <section id="bell" class="bell" hidden>
+        <div>
+          <strong>🔔 <span id="bell-title">Claude needs you</span></strong>
+          <p id="bell-text"></p>
+        </div>
+        <button id="bell-dismiss" class="btn" type="button">Dismiss</button>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <h2 id="board-title">Order board</h2>
+          <div id="board" class="board"></div>
+        </div>
+        <div class="card">
+          <h2>What the cats are doing</h2>
+          <ul id="activity" class="activity"></ul>
+        </div>
+      </section>
+
+      <p id="demo-hint" class="hint" hidden>
+        This is the demo. To see your real Claude Code session, run <code>npm start</code> in the code-cat-cafe folder
+        and connect a project with <code>npm run setup -- ~/path/to/project</code>.
+      </p>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
