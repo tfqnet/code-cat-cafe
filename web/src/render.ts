@@ -1,11 +1,11 @@
 // Draws the office: isometric floor, walls, furniture, the lounge and the cats.
 // Everything is flat-coloured canvas shapes, so there are no image assets.
 
-import { allCats, cats, DESKS, formatElapsed, PLAY, TREE, type Cat, type Desk, type Role, type Stage } from './world';
+import { allCats, cats, DESKS, FLOOR_D, formatElapsed, PLAY, TREE, type Cat, type Desk, type Role, type Stage } from './world';
 import type { Director } from './director';
 
-export const W = 420, H = 320;
-const TW = 40, TH = 20, OX = 170, OY = 100;
+export const W = 460, H = 335;
+const TW = 40, TH = 20, OX = 210, OY = 100;
 type P = [number, number];
 const g2s = (x: number, y: number): P => [OX + ((x - y) * TW) / 2, OY + ((x + y) * TH) / 2];
 const up = (p: P, h: number): P => [p[0], p[1] - h];
@@ -75,12 +75,12 @@ export class Renderer {
 
   // ---- room -------------------------------------------------------------------------
   private room() {
-    for (let i = 0; i < 12; i++) for (let j = 0; j < 8; j++) {
+    for (let i = 0; i < 12; i++) for (let j = 0; j < FLOOR_D; j++) {
       const lounge = i >= 7;
       this.poly([g2s(i, j), g2s(i + 1, j), g2s(i + 1, j + 1), g2s(i, j + 1)],
         lounge ? ((i + j) % 2 ? '#B9D3C3' : '#C4DBCC') : ((i + j) % 2 ? '#E2BF94' : '#EACDA6'));
     }
-    const A = g2s(0, 0), L = g2s(0, 8), M = g2s(7, 0), R = g2s(12, 0);
+    const A = g2s(0, 0), L = g2s(0, FLOOR_D), M = g2s(7, 0), R = g2s(12, 0);
     this.poly([L, A, up(A, 80), up(L, 80)], '#F5E4C8');
     this.poly([A, M, up(M, 80), up(A, 80)], '#EDD6B4');
     this.poly([M, R, up(R, 80), up(M, 80)], '#DCE7DE');
@@ -311,15 +311,19 @@ export class Renderer {
     this.ctx.clearRect(0, 0, W, H);
     this.room();
     const items: { k: number; f: () => void }[] = DESKS.map((d) => ({ k: d.cx + d.cy, f: () => this.desk(d) }));
-    for (const y of [0, 1, 2, 5, 6, 7]) items.push({ k: 7 + y + 0.5, f: () => this.divider(y) });
+    for (const y of [0, 1, 2, 5, 6, 7, 8, 9]) items.push({ k: 7 + y + 0.5, f: () => this.divider(y) });
     items.push(
       { k: 10.4, f: () => { const a = up(g2s(7, 3), 26), b = up(g2s(7, 5), 26); this.ctx.strokeStyle = '#C99A6B'; this.ctx.lineWidth = 3; this.ctx.beginPath(); this.ctx.moveTo(a[0], a[1]); this.ctx.lineTo(b[0], b[1]); this.ctx.stroke(); } },
       { k: TREE.x + TREE.y, f: () => this.tree() }, { k: 17.2, f: () => this.bed() }, { k: 15.6, f: () => this.bowls() }, { k: 14.7, f: () => this.ball() },
     );
     for (const c of allCats()) items.push({ k: c.act?.spot.n === 'tree' ? TREE.x + TREE.y + 0.5 : c.x + c.y + 0.01, f: () => this.cat(c) });
     // Floor labels go down first so cats walk over them.
-    for (const d of DESKS) { const p = g2s(d.cx - d.w / 2, d.cy + d.d / 2); this.pill(d.label, p[0] - 4, p[1] + 12); }
-    const lp = g2s(11.4, 7.6); this.pill('lounge', lp[0], lp[1] + 4);
+    // Each desk's name goes on the open floor beside it (past the cat's seat), never on the desk.
+    for (const d of DESKS) {
+      const p = g2s(d.cx + d.w / 2 + (d.d > d.w ? 1.7 : 0.9), d.cy);
+      this.pill(d.label, p[0], p[1] + 2);
+    }
+    const lp = g2s(11.4, FLOOR_D - 0.6); this.pill('lounge', lp[0], lp[1] + 4);
     items.sort((a, b) => a.k - b.k).forEach((i) => i.f());
     for (const c of allCats()) this.bubble(c);
     this.timers();

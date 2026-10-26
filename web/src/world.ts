@@ -1,5 +1,8 @@
 // The office world: layout, cats, movement and idle behaviour.
-// Grid units: the floor is 12 x 8 tiles. x < 7 is the work area, x > 7 the lounge.
+// Grid units: the floor is 12 wide x FLOOR_D deep. x < 7 is the work area, x > 7 the lounge.
+
+/** How many tiles deep the floor is (it is 12 wide; x < 7 is the work area). */
+export const FLOOR_D = 10;
 
 export type Role = 'lead' | 'planner' | 'designer' | 'developer' | 'tester';
 export const WORKERS: Role[] = ['planner', 'designer', 'developer', 'tester'];
@@ -9,20 +12,20 @@ export type Stage = 'order' | 'plan' | 'design' | 'code' | 'bug' | 'done';
 export interface Desk { key: string; role: Role; label: string; cx: number; cy: number; w: number; d: number; h: number; top?: string; l?: string; r?: string }
 export const DESKS: Desk[] = [
   { key: 'counter', role: 'lead', label: 'lead', cx: 2.0, cy: 1.05, w: 2.4, d: 0.7, h: 12, top: '#B88758', l: '#7A5038', r: '#8E5E40' },
-  { key: 'planner', role: 'planner', label: 'planner', cx: 1.0, cy: 6.2, w: 1.0, d: 1.4, h: 16 },
-  { key: 'designer', role: 'designer', label: 'designer', cx: 6.0, cy: 1.0, w: 1.4, d: 1.0, h: 16 },
-  { key: 'developer', role: 'developer', label: 'developer', cx: 5.6, cy: 6.6, w: 1.4, d: 1.0, h: 16 },
-  { key: 'tester', role: 'tester', label: 'tester', cx: 3.3, cy: 7.0, w: 1.4, d: 1.0, h: 16 },
+  { key: 'planner', role: 'planner', label: 'planner', cx: 1.0, cy: 3.3, w: 1.0, d: 1.4, h: 16 },
+  { key: 'designer', role: 'designer', label: 'designer', cx: 1.0, cy: 5.2, w: 1.0, d: 1.4, h: 16 },
+  { key: 'developer', role: 'developer', label: 'developer', cx: 1.0, cy: 7.1, w: 1.0, d: 1.4, h: 16 },
+  { key: 'tester', role: 'tester', label: 'tester', cx: 1.0, cy: 9.0, w: 1.0, d: 1.4, h: 16 },
 ];
 export const deskKey = (r: Role) => (r === 'lead' ? 'counter' : r);
 
 /** Where each cat sits to work. */
 export const SEAT: Record<Role, Pt> = {
-  lead: [2.0, 0.35], planner: [1.95, 6.2], designer: [6.0, 1.95], developer: [5.6, 5.65], tester: [3.3, 6.05],
+  lead: [2.0, 0.35], planner: [1.95, 3.3], designer: [1.95, 5.2], developer: [1.95, 7.1], tester: [1.95, 9.0],
 };
 /** Where another cat stands to collect something from a desk. */
 export const PICKUP: Record<string, Pt> = {
-  counter: [2.3, 1.95], planner: [2.2, 5.2], designer: [5.0, 2.1], developer: [4.6, 5.4], tester: [2.5, 5.9],
+  counter: [2.3, 1.95], planner: [2.3, 2.65], designer: [2.3, 4.55], developer: [2.3, 6.45], tester: [2.3, 8.35],
 };
 
 export const TREE = { x: 10.2, y: 1.6 };
@@ -96,7 +99,7 @@ export function route(c: Cat, to: Pt): Pt[] {
 
 function randomFloorPoint(): Pt {
   for (let i = 0; i < 40; i++) {
-    const x = rnd(0.6, 11.4), y = rnd(0.7, 7.4);
+    const x = rnd(0.6, 11.4), y = rnd(0.7, FLOOR_D - 0.6);
     if (Math.abs(x - 7) < 0.55) continue;
     if (x < 3.6 && y < 1.8) continue;
     if (OBSTACLES.some(([ox, oy, w, d]) => Math.abs(x - ox) < w / 2 + 0.45 && Math.abs(y - oy) < d / 2 + 0.45)) continue;
