@@ -44,6 +44,8 @@ export interface Cat {
   flip: boolean; walking: boolean; working: boolean; busy: boolean;
   bubble: string | null; bubbleT: number; thought: string; thoughtT: number; pulseT: number;
   path: Pt[]; goal: PlaySpot | null; act: { spot: PlaySpot; t: number } | null; idleT: number; blinkOffset: number;
+  /** Seconds the cat must stay at its post (the lead while Claude works). */
+  dutyT: number;
 }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
@@ -51,9 +53,9 @@ const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 function makeCat(role: Role, fur: string, belly: string, tail: string, eye: string, marks: Cat['marks'] = []): Cat {
   return {
     role, x: SEAT[role][0], y: SEAT[role][1], fur, belly, tail, eye, marks,
-    flip: false, walking: false, working: false, busy: role === 'lead',
+    flip: false, walking: false, working: false, busy: false,
     bubble: null, bubbleT: 0, thought: '', thoughtT: 0, pulseT: 0,
-    path: [], goal: null, act: null, idleT: rnd(0.5, 2.5), blinkOffset: Math.random() * 4,
+    path: [], goal: null, act: null, idleT: rnd(0.5, 2.5), blinkOffset: Math.random() * 4, dutyT: 0,
   };
 }
 
@@ -115,6 +117,16 @@ export function interrupt(c: Cat) {
   c.path = [];
 }
 
+/** Sends a cat back to its seat and keeps it there for a while (the lead, while Claude is working). */
+export function callToDuty(c: Cat, seconds: number) {
+  c.dutyT = Math.max(c.dutyT, seconds);
+  const [sx, sy] = SEAT[c.role];
+  if (c.act || c.goal || (c.path.length === 0 && Math.hypot(c.x - sx, c.y - sy) > 0.05)) {
+    interrupt(c);
+    c.path = route(c, [sx, sy]);
+  }
+}
+
 /** What a cat with no task does: wander, play in the lounge, or sit for a bit. */
 function idle(c: Cat, dt: number) {
   if (c.act) {
@@ -147,7 +159,9 @@ export function updateCats(dt: number) {
     if (c.bubbleT > 0) { c.bubbleT -= dt; if (c.bubbleT <= 0) c.bubble = null; }
     if (c.thoughtT > 0) c.thoughtT -= dt;
     if (c.pulseT > 0) c.pulseT -= dt;
-    if (c.busy) moveCat(c, dt, 1.9); else idle(c, dt);
+    if (c.busy) moveCat(c, dt, 1.9);
+    else if (c.dutyT > 0) { c.dutyT -= dt; moveCat(c, dt, 1.9); if (c.dutyT <= 0) c.idleT = rnd(1, 3); }
+    else idle(c, dt);
   }
 }
 

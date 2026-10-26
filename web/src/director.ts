@@ -3,7 +3,7 @@
 // Actions run one after another, so the story always reads in order even when
 // Claude Code is faster than the cats.
 
-import { cats, deskKey, interrupt, PICKUP, route, say, SEAT, type Pt, type Role, type Stage } from './world';
+import { callToDuty, cats, deskKey, interrupt, PICKUP, route, say, SEAT, type Pt, type Role, type Stage } from './world';
 
 export type CafeEvent =
   | { type: 'hello' | 'session' | 'turn_done'; at?: number }
@@ -37,6 +37,9 @@ export interface UiHooks {
   changed(): void; // board / feed / bell need re-rendering
   ding(reason: 'permission' | 'idle'): void;
 }
+
+/** The lead stays at the counter this long after the last sign of work, in case no Stop event arrives (e.g. Esc). */
+const TURN_DUTY_S = 90;
 
 export class Director {
   ticket: Ticket | null = null;
@@ -83,6 +86,8 @@ export class Director {
         this.ticket = { holder: 'counter', stage: 'order' };
         this.phase = 'new order';
         say(cats.lead, 'new order!', 1.6);
+        this.turnActive = true;
+        callToDuty(cats.lead, TURN_DUTY_S);
         this.ui.status(`New order: ${text}`);
         this.ui.changed();
       } },
@@ -148,6 +153,7 @@ export class Director {
     const c = cats[role] ?? cats.lead;
     c.thought = tool; c.thoughtT = 3;
     if (role === 'lead' && this.active.size === 0) c.pulseT = 2.5;
+    if (role === 'lead') callToDuty(c, this.turnActive ? TURN_DUTY_S : 8);
     this.feed.unshift({ role, text: detail ? `${tool} · ${detail}` : tool, at: Date.now() });
     this.feed = this.feed.slice(0, 8);
     this.ui.changed();
@@ -157,6 +163,7 @@ export class Director {
     this.waiting = { reason, message: message || (reason === 'idle' ? 'Claude is waiting for your reply' : 'Claude needs your OK') };
     say(cats.lead, reason === 'idle' ? 'your turn!' : 'need you!', 9999);
     this.ringT = 0;
+    callToDuty(cats.lead, 9999);
     this.ui.status('The lead rings the bell. Check your terminal');
     this.ui.changed();
   }
@@ -164,6 +171,7 @@ export class Director {
   clearWaiting() {
     if (!this.waiting) return;
     this.waiting = null;
+    cats.lead.dutyT = 5;
     if (cats.lead.bubble === 'need you!' || cats.lead.bubble === 'your turn!') say(cats.lead, 'thanks!', 1.2);
     this.ui.changed();
   }
@@ -177,6 +185,8 @@ export class Director {
 
   private onTurnDone() {
     this.push({ kind: 'do', run: () => {
+      this.turnActive = false;
+      cats.lead.dutyT = Math.min(cats.lead.dutyT, 3);
       const t = this.ticket;
       if (!t) return;
       const steps: Action[] = [];
@@ -217,6 +227,9 @@ export class Director {
   }
 
   // ---- queue ------------------------------------------------------------------
+
+  /** True from a new prompt until Claude finishes its turn: the lead stays at the counter. */
+  private turnActive = false;
 
   private push(...a: Action[]) { this.queue.push(...a); }
 
