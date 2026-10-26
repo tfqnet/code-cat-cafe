@@ -11,7 +11,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const MARK = '# code-cat-cafe';
+export const MARK = '# code-cat-cafe';
 export const HOOK_COMMAND =
   `curl -s -m 2 -X POST -H 'Content-Type: application/json' --data-binary @- "http://localhost:\${CAFE_PORT:-4777}/hook" >/dev/null 2>&1 || true ${MARK}`;
 
@@ -30,7 +30,7 @@ export const EVENTS = {
   Stop: false,
 };
 
-const isOurs = (h) => typeof h?.command === 'string' && h.command.includes(MARK);
+export const isOurs = (h) => typeof h?.command === 'string' && h.command.includes(MARK);
 
 export function addHooks(settings) {
   const s = settings && typeof settings === 'object' ? settings : {};
@@ -43,6 +43,13 @@ export function addHooks(settings) {
     s.hooks[event] = [...groups, group];
   }
   return s;
+}
+
+/** How many of the office's hook events are present in a settings object. */
+export function countHookEvents(settings) {
+  const hooks = settings && typeof settings === 'object' ? settings.hooks : null;
+  if (!hooks || typeof hooks !== 'object') return 0;
+  return Object.keys(EVENTS).filter((e) => (hooks[e] || []).some((g) => (g.hooks || []).some(isOurs))).length;
 }
 
 export function removeHooks(settings) {
@@ -80,8 +87,7 @@ function copyTeam(projectDir) {
   }
 }
 
-function main() {
-  const args = process.argv.slice(2);
+export function main(args = process.argv.slice(2)) {
   const global = args.includes('--global');
   const remove = args.includes('--remove');
   const team = args.includes('--team');
@@ -96,7 +102,7 @@ function main() {
       console.error('\nTell me which project to connect, for example:\n  npm run setup -- ~/code/my-app\n\nOr connect every project with:\n  npm run setup -- --global\n');
       process.exit(1);
     }
-    projectDir = path.resolve(target.replace(/^~(?=$|\/)/, os.homedir()));
+    projectDir = path.resolve(target.replace(/^~(?=$|[\\/])/, os.homedir()));
     if (!fs.existsSync(projectDir)) { console.error(`\nFolder not found: ${projectDir}\n`); process.exit(1); }
     file = path.join(projectDir, '.claude', 'settings.local.json');
   }
@@ -112,6 +118,9 @@ function main() {
   fs.writeFileSync(file, JSON.stringify(next, null, 2) + '\n');
 
   console.log(`\n${remove ? 'Removed' : 'Added'} office hooks ${remove ? 'from' : 'in'} ${file}`);
+  if (process.platform === 'win32' && !remove) {
+    console.log('\nNote: the hooks use curl and POSIX shell syntax. On Windows, run Claude Code from Git Bash or WSL.');
+  }
   if (team && projectDir && !remove) { console.log('\nTeam:'); copyTeam(projectDir); }
   if (!remove) {
     console.log('\nNext:');

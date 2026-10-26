@@ -21,6 +21,8 @@ const LOG_DIR = path.join(os.homedir(), '.code-cat-cafe');
 const RAW_LOG = path.join(LOG_DIR, 'hook-events.jsonl');
 const MAX_LOG_BYTES = 2 * 1024 * 1024;
 
+const VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.resolve(ROOT, '../package.json'), 'utf8')).version; } catch { return 'unknown'; } })();
+const stats = { events: 0, lastEventAt: 0 };
 const clients = new Set();
 const recent = []; // last office events, replayed to a newly opened page
 const MAX_RECENT = 200;
@@ -54,6 +56,7 @@ function handleHook(req, res) {
     let payload;
     try { payload = JSON.parse(body); } catch { return; }
     logRaw(payload);
+    stats.events += 1; stats.lastEventAt = Date.now();
     for (const e of normalize(payload, { readFile })) {
       if (process.env.CAFE_DEBUG) console.log('→', JSON.stringify(e));
       broadcast(e);
@@ -106,7 +109,7 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify(recent));
   } else if (pathname === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, clients: clients.size }));
+    res.end(JSON.stringify({ ok: true, version: VERSION, clients: clients.size, events: stats.events, lastEventAt: stats.lastEventAt }));
   } else {
     serveStatic(req, res);
   }

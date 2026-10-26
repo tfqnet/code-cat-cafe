@@ -7,6 +7,7 @@ import { cats, updateCats, type Role } from './world';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const statusEl = $('status'), boardEl = $('board'), boardTitle = $('board-title'), activityEl = $('activity');
 const bellEl = $('bell'), bellTitle = $('bell-title'), bellText = $('bell-text');
+const projectsEl = $('projects');
 const modeEl = $('mode'), soundBtn = $<HTMLButtonElement>('sound'), demoHint = $('demo-hint');
 
 // ---- sound ------------------------------------------------------------------------
@@ -50,6 +51,15 @@ const PHASE_COLOR: Record<string, string> = {
   'new order': STAGE_COLOR.order, planning: STAGE_COLOR.plan, designing: STAGE_COLOR.design, coding: STAGE_COLOR.code,
   testing: '#C98A4B', fixing: STAGE_COLOR.bug, 'waiting for you': '#E0A030', 'lead is on it': STAGE_COLOR.order,
 };
+// A stable colour per project, so the same project always looks the same.
+const PROJECT_COLORS = ['#3F8F5B', '#4A7FB5', '#B5683F', '#8A5FB0', '#B09A3A', '#B04A6A'];
+function projectColor(name: string) {
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return PROJECT_COLORS[h % PROJECT_COLORS.length];
+}
+const projectTag = (name?: string) =>
+  name ? `<span class="proj" style="--pc:${projectColor(name)}">${esc(name)}</span>` : '';
 const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!));
 
 let dirty = true;
@@ -62,7 +72,7 @@ const director = new Director({
 function renderBoard() {
   const col = (title: string, items: string[]) =>
     `<div><div class="col-title">${title} (${items.length})</div>${items.join('') || '<div class="empty">–</div>'}</div>`;
-  const card = (text: string, extra = '') => `<div class="ticket">${esc(text)}${extra}</div>`;
+  const card = (text: string, extra = '', project?: string) => `<div class="ticket">${projectTag(project)}${esc(text)}${extra}</div>`;
   const phase = director.waiting ? 'waiting for you' : director.phase;
   const phaseTag = phase ? `<small><span class="dot" style="background:${PHASE_COLOR[phase] || '#999'}"></span>${esc(phase)}</small>` : '';
 
@@ -77,8 +87,8 @@ function renderBoard() {
     boardTitle.textContent = 'Order board';
     boardEl.innerHTML =
       col('To do', []) +
-      col('Doing', director.orders.filter((o) => o.state === 'doing').map((o) => card(o.text, phaseTag))) +
-      col('Done', director.orders.filter((o) => o.state === 'done').map((o) => card(o.text, '<small class="ok">✓ served</small>')));
+      col('Doing', director.orders.filter((o) => o.state === 'doing').map((o) => card(o.text, phaseTag, o.project))) +
+      col('Done', director.orders.filter((o) => o.state === 'done').map((o) => card(o.text, '<small class="ok">✓ served</small>', o.project)));
   }
 }
 
@@ -88,8 +98,17 @@ function ago(at: number) {
 }
 function renderActivity() {
   activityEl.innerHTML = director.feed.length
-    ? director.feed.map((f) => `<li><span class="who" style="color:${ROLE_COLOR[f.role]}">${f.role}</span><span class="what">${esc(f.text)}</span><span class="when">${ago(f.at)}</span></li>`).join('')
+    ? director.feed.map((f) => `<li><span class="who" style="color:${ROLE_COLOR[f.role]}">${f.role}</span><span class="what">${projectTag(f.project)}${esc(f.text)}</span><span class="when">${ago(f.at)}</span></li>`).join('')
     : '<li><span class="what" style="color:var(--muted)">Nothing yet. The cats are chilling.</span></li>';
+}
+
+function renderProjects() {
+  const now = Date.now();
+  const list = [...director.projects.entries()].sort((a, b) => b[1] - a[1]);
+  projectsEl.hidden = list.length === 0;
+  projectsEl.innerHTML = list
+    .map(([name, at]) => `<span class="chip${now - at < 30000 ? ' live' : ''}" style="--pc:${projectColor(name)}"><span class="dot"></span>${esc(name)}<small>${ago(at)}</small></span>`)
+    .join('');
 }
 
 let titleFlash = 0;
@@ -99,7 +118,7 @@ function renderBell() {
   if (w) {
     bellTitle.textContent = w.reason === 'idle' ? 'Claude is waiting for your reply' : 'Claude needs you';
     const msg = /[.?!]$/.test(w.message) ? w.message : `${w.message}.`;
-    bellText.textContent = `${msg} Answer in your terminal.`;
+    bellText.textContent = `${w.project ? `[${w.project}] ` : ''}${msg} Answer in your terminal.`;
   }
 }
 $('bell-dismiss').addEventListener('click', () => director.clearWaiting());
@@ -135,7 +154,7 @@ function frame(now: number) {
   updateCats(dt);
   renderer.draw();
   activityTick += dt;
-  if (dirty || activityTick > 5) { renderBoard(); renderActivity(); renderBell(); dirty = false; activityTick = 0; }
+  if (dirty || activityTick > 5) { renderBoard(); renderActivity(); renderBell(); renderProjects(); dirty = false; activityTick = 0; }
   // Flash the tab title while Claude is waiting, so you notice from another tab.
   if (director.waiting) {
     titleFlash += dt;

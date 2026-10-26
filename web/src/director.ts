@@ -5,7 +5,7 @@
 
 import { callToDuty, cats, deskKey, interrupt, PICKUP, route, say, SEAT, type Pt, type Role, type Stage } from './world';
 
-export type CafeEvent =
+type CafeEventBody =
   | { type: 'hello' | 'session' | 'turn_done'; at?: number }
   | { type: 'order'; text: string; project?: string }
   | { type: 'agent_start'; role: Role; agent?: string; detail?: string }
@@ -16,12 +16,15 @@ export type CafeEvent =
   | { type: 'todos'; todos: { id?: string; text: string; status: string }[] }
   | { type: 'task'; id?: string; text?: string; status?: string };
 
+/** Events from the bridge also say which project and session they came from. */
+export type CafeEvent = CafeEventBody & { project?: string; session?: string };
+
 /** holder is a desk key ('counter', 'planner', ...) or a cat carrying it ('cat:planner'). */
 export interface Ticket { holder: string; stage: Stage }
-export interface Order { id: number; text: string; state: 'doing' | 'done' }
+export interface Order { id: number; text: string; state: 'doing' | 'done'; project?: string }
 export interface Todo { id?: string; text: string; status: string }
-export interface Waiting { reason: 'permission' | 'idle'; message: string }
-export interface FeedItem { role: Role; text: string; at: number }
+export interface Waiting { reason: 'permission' | 'idle'; message: string; project?: string }
+export interface FeedItem { role: Role; text: string; at: number; project?: string }
 
 type Action =
   | { kind: 'do'; run: () => void }
@@ -47,6 +50,10 @@ export class Director {
   todos: Todo[] = [];
   waiting: Waiting | null = null;
   feed: FeedItem[] = [];
+  /** Projects seen so far, with the time of their last event. */
+  projects = new Map<string, number>();
+  /** Project of the event being handled right now. */
+  private cur: string | undefined;
   phase = '';
   private active = new Set<Role>();
   private ended = new Set<Role>();
@@ -61,6 +68,8 @@ export class Director {
   // ---- event handling -------------------------------------------------------
 
   handle(e: CafeEvent) {
+    this.cur = e.project || undefined;
+    if (this.cur) { this.projects.set(this.cur, Date.now()); this.ui.changed(); }
     switch (e.type) {
       case 'order': return this.onOrder(e.text);
       case 'agent_start': return this.onAgentStart(e.role, e.detail || e.agent);
@@ -77,10 +86,11 @@ export class Director {
 
   private onOrder(text: string) {
     this.clearWaiting();
+    const project = this.cur;
     this.push(
       { kind: 'do', run: () => {
         for (const o of this.orders) if (o.state === 'doing') o.state = 'done';
-        this.orders.unshift({ id: this.nextOrderId++, text, state: 'doing' });
+        this.orders.unshift({ id: this.nextOrderId++, text, state: 'doing', project });
         this.orders = this.orders.slice(0, 8);
         this.todos = [];
         this.ticket = { holder: 'counter', stage: 'order' };
@@ -88,7 +98,7 @@ export class Director {
         say(cats.lead, 'new order!', 1.6);
         this.turnActive = true;
         callToDuty(cats.lead, TURN_DUTY_S);
-        this.ui.status(`New order: ${text}`);
+        this.ui.status(`New order${project ? ` [${project}]` : ''}: ${text}`);
         this.ui.changed();
       } },
       { kind: 'wait', ms: 1200 },
@@ -154,13 +164,13 @@ export class Director {
     c.thought = tool; c.thoughtT = 3;
     if (role === 'lead' && this.active.size === 0) c.pulseT = 2.5;
     if (role === 'lead') callToDuty(c, this.turnActive ? TURN_DUTY_S : 8);
-    this.feed.unshift({ role, text: detail ? `${tool} · ${detail}` : tool, at: Date.now() });
+    this.feed.unshift({ role, text: detail ? `${tool} · ${detail}` : tool, at: Date.now(), project: this.cur });
     this.feed = this.feed.slice(0, 8);
     this.ui.changed();
   }
 
   private onNeedsYou(reason: 'permission' | 'idle', message?: string) {
-    this.waiting = { reason, message: message || (reason === 'idle' ? 'Claude is waiting for your reply' : 'Claude needs your OK') };
+    this.waiting = { reason, message: message || (reason === 'idle' ? 'Claude is waiting for your reply' : 'Claude needs your OK'), project: this.cur };
     say(cats.lead, reason === 'idle' ? 'your turn!' : 'need you!', 9999);
     this.ringT = 0;
     callToDuty(cats.lead, 9999);

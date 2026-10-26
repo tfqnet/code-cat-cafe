@@ -85,3 +85,12 @@ h2 { font-size: 14px; margin: 0 0 10px; font-weight: 600; color: var(--muted); }
 
 .hint { margin-top: 14px; font-size: 13px; color: var(--muted); }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; background: var(--line); padding: 1px 5px; border-radius: 5px; }
+
+/* project labels */
+.projects { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pc); opacity: 0.45; }
+.chip.live { color: var(--text); border-color: var(--pc); }
+.chip.live .dot { opacity: 1; }
+.chip small { font-size: 11px; opacity: 0.8; }
+.proj { display: inline-block; font-size: 11px; line-height: 1.5; padding: 0 7px; margin-right: 6px; border-radius: 999px; color: var(--pc); border: 1px solid var(--pc); vertical-align: 1px; }

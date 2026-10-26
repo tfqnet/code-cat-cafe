@@ -1,6 +1,6 @@
 {
   "name": "code-cat-cafe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "A pixel cat office that shows your Claude Code agents at work.",
   "type": "module",
@@ -14,11 +14,40 @@
     "setup": "node bridge/setup-hooks.js",
     "sample": "node bridge/send-sample.js",
     "typecheck": "tsc --noEmit -p web",
-    "test": "node --test bridge/bridge.test.js"
+    "test": "node --test bridge/bridge.test.js",
+    "prepare": "vite build web",
+    "doctor": "node bin/code-cat-office.js doctor"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
     "typescript": "^5.6.0",
     "vite": "^6.0.0"
-  }
+  },
+  "license": "MIT",
+  "bin": {
+    "code-cat-office": "bin/code-cat-office.js"
+  },
+  "files": [
+    "bin",
+    "bridge",
+    "!bridge/*.test.js",
+    "web/dist",
+    "team-kit",
+    "docs/screenshot.png",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tfqnet/code-cat-cafe.git"
+  },
+  "keywords": [
+    "claude-code",
+    "hooks",
+    "agents",
+    "visualizer",
+    "pixel-art",
+    "dashboard"
+  ]
 }

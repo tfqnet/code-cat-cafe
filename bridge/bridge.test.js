@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { normalize, roleFor, readResult } from './normalize.js';
-import { addHooks, removeHooks, EVENTS } from './setup-hooks.js';
+import { addHooks, removeHooks, countHookEvents, EVENTS } from './setup-hooks.js';
+import { hooksCheck, eventsCheck } from './doctor.js';
 
 test('roleFor maps agent names to office roles', () => {
   assert.equal(roleFor('planner'), 'planner');
@@ -81,4 +82,38 @@ test('setup adds hooks once and removes them cleanly', () => {
   assert.equal(once.hooks.PreToolUse.length, 2);
   const back = removeHooks(structuredClone(once));
   assert.deepEqual(back, mine);
+});
+
+test('countHookEvents counts connected events and ignores other hooks', () => {
+  const total = Object.keys(EVENTS).length;
+  assert.equal(countHookEvents({}), 0);
+  assert.equal(countHookEvents(null), 0);
+  assert.equal(countHookEvents(addHooks({})), total);
+  const mine = { hooks: { Stop: [{ hooks: [{ type: 'command', command: 'echo hi' }] }] } };
+  assert.equal(countHookEvents(mine), 0);
+  assert.equal(countHookEvents(removeHooks(addHooks({}))), 0);
+});
+
+test('doctor hooksCheck: none, partial, project and global', () => {
+  const total = Object.keys(EVENTS).length;
+  assert.equal(hooksCheck({ global: 0, project: 0, projectFile: 'x' }).ok, false);
+  const partial = hooksCheck({ global: 0, project: 3, projectFile: 'x' });
+  assert.equal(partial.ok, false);
+  assert.match(partial.detail, new RegExp(`3 of ${total}`));
+  assert.equal(hooksCheck({ global: 0, project: total, projectFile: 'x' }).ok, true);
+  assert.equal(hooksCheck({ global: total, project: 0, projectFile: 'x' }).ok, true);
+});
+
+test('doctor eventsCheck: server down, no events, events flowing', () => {
+  assert.equal(eventsCheck(null).ok, false);
+  assert.equal(eventsCheck({ events: 0, lastEventAt: 0 }).ok, false);
+  const ok = eventsCheck({ events: 7, lastEventAt: 100000 }, 105000);
+  assert.equal(ok.ok, true);
+  assert.match(ok.detail, /7 received, last 5s ago/);
+});
+
+test('events carry the project name from the working directory', () => {
+  const [e] = normalize({ hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: 'ls' }, cwd: '/Users/me/code/my-app', session_id: 'abcdef123456' });
+  assert.equal(e.project, 'my-app');
+  assert.equal(e.session, 'abcdef12');
 });

@@ -20,19 +20,25 @@ Each Claude Code subagent is a cat with its own table. When a request comes in, 
 You need Node.js 20 or newer and Claude Code.
 
 ```bash
-git clone https://github.com/tfqnet/code-cat-cafe.git
-cd code-cat-cafe
-npm install
-npm start                                   # opens http://localhost:4777
+npx github:tfqnet/code-cat-cafe             # starts the office at http://localhost:4777
 ```
 
-Connect a project (in a second terminal, from the `code-cat-cafe` folder):
+Connect a project (in a second terminal, from that project's folder):
 
 ```bash
-npm run setup -- ~/code/my-app --team       # hooks + the planner/designer/developer/tester team
+npx github:tfqnet/code-cat-cafe setup       # hooks for the current folder
+npx github:tfqnet/code-cat-cafe setup --global   # or for every project
 ```
 
-Then start Claude Code in that project and ask for a feature. Want to see it move without Claude Code? Run `npm run sample`, or open http://localhost:4777/?demo.
+Then **start a new Claude Code session** in the project (hooks load when a session starts) and ask for a feature. If nothing moves, run `npx github:tfqnet/code-cat-cafe doctor`: it says what is missing.
+
+Want to see it move without Claude Code? Run `code-cat-office sample`, or open http://localhost:4777/?demo.
+
+Prefer a clone? `git clone`, `npm install`, then `npm start` and `npm run setup -- ~/code/my-app`. `npm link` gives you the short `code-cat-office` command.
+
+### Many projects, one office
+
+One office serves all your connected projects. Every order, activity line and bell is tagged with its project name (the folder name), and a chip row under the title shows each project and lights up while it is active.
 
 ## How it works
 
@@ -62,14 +68,17 @@ The `team-kit/` folder has a ready-made team whose names match exactly. `npm run
 
 | Command | What it does |
 | --- | --- |
-| `npm start` | Build the page and open the office at http://localhost:4777 |
-| `npm run setup -- <project>` | Add office hooks to one project |
-| `npm run setup -- <project> --team` | Same, plus copy the agent team and `CLAUDE.md` |
-| `npm run setup -- --global` | Add office hooks for every project (`~/.claude/settings.json`) |
-| `npm run setup -- <project> --remove` | Take the office hooks out again (add `--global` for the global ones) |
-| `npm run sample` | Play a sample session into the office (no Claude Code needed) |
+| `code-cat-office` | Start the office and open http://localhost:4777 (`--no-open`, `--port 4778`) |
+| `code-cat-office setup [path]` | Add office hooks to a project (default: current folder) |
+| `code-cat-office setup [path] --team` | Same, plus copy the agent team and `CLAUDE.md` |
+| `code-cat-office setup --global` | Add office hooks for every project (`~/.claude/settings.json`) |
+| `code-cat-office setup [path] --remove` | Take the office hooks out again (add `--global` for the global ones) |
+| `code-cat-office doctor [path]` | Check Node, curl, the page, the server, the hooks and whether events arrive |
+| `code-cat-office sample` | Play a sample session into the office (no Claude Code needed) |
 | `npm run dev` | Development mode with hot reload (page on http://localhost:5173) |
 | `npm test` | Bridge unit tests |
+
+The `npm run setup`, `npm start`, `npm run sample` and `npm run doctor` scripts do the same from a clone.
 
 Use a different port with `CAFE_PORT=4778 npm start`. The hooks read the same variable, so set it in your shell profile if you change it.
 
@@ -78,6 +87,21 @@ Use a different port with `CAFE_PORT=4778 npm start`. The hooks read the same va
 - **Your own cat:** change the colours in `web/src/world.ts` (the `cats` section): `fur`, `belly`, `tail`, `eye`, plus optional `marks` for patches and stripes.
 - **Layout:** desks, seats and lounge spots are also in `web/src/world.ts`.
 - **Drawing:** everything is drawn in `web/src/render.ts`, with no image files.
+
+## Platforms
+
+- **macOS:** tested.
+- **Linux:** should work as is (it needs `curl`, and `xdg-open` for the auto-open). Not tested.
+- **Windows:** the hooks use `curl` and POSIX shell syntax, so run Claude Code from Git Bash or WSL. Not tested.
+
+`doctor` checks for `curl` and tells you what is missing.
+
+## Privacy and security
+
+- The office listens only on `127.0.0.1`, so other machines cannot reach it. Do not set `CAFE_HOST` to anything else on a shared network.
+- The page shows the first words of your prompts, tool names and file names. Nothing leaves your machine.
+- There is no login: any program on your own machine can post events to the office (only fake cat activity, nothing more).
+- Raw hook payloads are logged to `~/.code-cat-cafe/hook-events.jsonl` (rotated at 2 MB). Those include your prompts, so delete the file if you share your machine.
 
 ## Known limits
 
@@ -88,8 +112,10 @@ Use a different port with `CAFE_PORT=4778 npm start`. The hooks read the same va
 ## Project layout
 
 ```
-bridge/      server.js (hook receiver + live stream), normalize.js, setup-hooks.js, send-sample.js, tests
+bin/         code-cat-office.js (the command line)
+bridge/      server.js (hook receiver + live stream), normalize.js, setup-hooks.js, doctor.js, send-sample.js, tests
 web/         index.html, src/ (world, director, render, feed, main)
 team-kit/    CLAUDE.md + .claude/agents (planner, designer, developer, tester)
 docs/        SETUP-MAC.md, screenshot
+LICENSE, CHANGELOG.md
 ```
