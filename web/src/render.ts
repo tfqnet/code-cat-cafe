@@ -1,7 +1,7 @@
 // Draws the office: isometric floor, walls, furniture, the lounge and the cats.
 // Everything is flat-coloured canvas shapes, so there are no image assets.
 
-import { allCats, cats, DESKS, PLAY, TREE, type Cat, type Desk, type Role, type Stage } from './world';
+import { allCats, cats, DESKS, formatElapsed, PLAY, TREE, type Cat, type Desk, type Role, type Stage } from './world';
 import type { Director } from './director';
 
 export const W = 420, H = 320;
@@ -177,6 +177,7 @@ export class Renderer {
     } else if (d.key === 'tester') {
       this.rr(cx - 2, cy - 7, 8, 8, 2, '#FFFDF5'); k.fillStyle = '#7A5038'; k.fillRect(cx - 1, cy - 6, 6, 2);
       const bob = busy ? Math.sin(T * 5) * 3 : 0;
+      if (this.dir.lastTest) this.badge(cx + 13, cy - 20, this.dir.lastTest.result, busy);
       k.strokeStyle = '#3F4750'; k.lineWidth = 2;
       k.beginPath(); k.arc(cx - 8 + bob, cy - 10, 4, 0, Math.PI * 2); k.stroke();
       k.beginPath(); k.moveTo(cx - 5 + bob, cy - 7); k.lineTo(cx - 2 + bob, cy - 4); k.stroke();
@@ -255,6 +256,37 @@ export class Renderer {
     if (t && t.holder === `cat:${c.role}`) this.paper(ox - 5, oy - 17, t.stage, true);
   }
 
+  /** Round pass / fail / unknown badge, dimmed while a new test run is in progress. */
+  private badge(x: number, y: number, r: 'pass' | 'fail' | null, dim: boolean) {
+    const k = this.ctx;
+    k.save();
+    k.globalAlpha = dim ? 0.35 : 1;
+    this.rr(x - 8, y - 8, 16, 16, 8, r === 'pass' ? '#3FA36B' : r === 'fail' ? '#D9534F' : '#9A8B7C');
+    k.strokeStyle = '#FFFFFF'; k.lineWidth = 2; k.lineCap = 'round'; k.lineJoin = 'round';
+    k.beginPath();
+    if (r === 'pass') { k.moveTo(x - 4, y); k.lineTo(x - 1, y + 3); k.lineTo(x + 4, y - 3); }
+    else if (r === 'fail') { k.moveTo(x - 3, y - 3); k.lineTo(x + 3, y + 3); k.moveTo(x + 3, y - 3); k.lineTo(x - 3, y + 3); }
+    k.stroke();
+    if (r === null) { k.fillStyle = '#FFFFFF'; k.font = `600 11px ${this.font}`; k.textAlign = 'center'; k.textBaseline = 'middle'; k.fillText('?', x, y + 0.5); }
+    k.restore();
+  }
+
+  /** How long each working cat has been at it (the lead: how long the current turn has run). */
+  private timers() {
+    const k = this.ctx, now = Date.now();
+    for (const c of allCats()) {
+      let since = 0;
+      if (c.role === 'lead') { if (this.dir.turnActive && c.dutyT > 0 && !c.walking) since = this.dir.turnStartAt; }
+      else if (c.working) since = c.workStartAt;
+      if (!since) continue;
+      const [px, py] = this.catPos(c), t = formatElapsed(now - since);
+      k.font = `500 10px ${this.font}`;
+      const tw = k.measureText(t).width;
+      this.rr(Math.round(px - tw / 2 - 5), Math.round(py + 4), tw + 10, 13, 6, 'rgba(90,55,35,0.82)');
+      k.fillStyle = '#F6E7CF'; k.textAlign = 'center'; k.textBaseline = 'middle'; k.fillText(t, Math.round(px), Math.round(py + 10.5));
+    }
+  }
+
   private bubble(c: Cat) {
     const k = this.ctx, T = this.T, [px, py] = this.catPos(c), x = Math.round(px), y = Math.round(py - 38);
     let text = c.bubble;
@@ -290,6 +322,7 @@ export class Renderer {
     const lp = g2s(11.4, 7.6); this.pill('lounge', lp[0], lp[1] + 4);
     items.sort((a, b) => a.k - b.k).forEach((i) => i.f());
     for (const c of allCats()) this.bubble(c);
+    this.timers();
   }
 
   /** Which cat (if any) is under a canvas point, for tap-to-inspect. */

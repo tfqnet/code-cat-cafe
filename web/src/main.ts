@@ -2,7 +2,7 @@ import './style.css';
 import { Director } from './director';
 import { startFeed, type FeedMode } from './feed';
 import { Renderer, STAGE_COLOR } from './render';
-import { cats, updateCats, type Role } from './world';
+import { cats, formatElapsed, updateCats, type Role } from './world';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const statusEl = $('status'), boardEl = $('board'), boardTitle = $('board-title'), activityEl = $('activity');
@@ -138,7 +138,7 @@ canvas.addEventListener('click', (e) => {
   if (!role) return;
   const last = director.feed.find((f) => f.role === role);
   const c = cats[role];
-  const doing = c.working ? 'working' : c.act ? `playing (${c.act.spot.n})` : c.walking ? 'walking' : 'chilling';
+  const doing = c.working ? `working${c.workStartAt ? ` for ${formatElapsed(Date.now() - c.workStartAt)}` : ''}` : c.act ? `playing (${c.act.spot.n})` : c.walking ? 'walking' : 'chilling';
   statusEl.textContent = `The ${role} is ${doing}.${last ? ` Last action: ${last.text}` : ''}`;
 });
 

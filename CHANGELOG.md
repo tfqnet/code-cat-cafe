@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Work timers.** Each working cat shows how long it has been at it (the lead shows how long the current turn has run); tapping a cat also says it.
+- **Test badge.** The tester's desk keeps a green ✓ or red ✗ from the last run, dimmed while a new run is in progress, and a grey ? when the result could not be read.
+
 ## 0.2.0 (2026-10-26)
 
 - **Renamed** the display name to Code Cat Office (the repo, package name, `~/.code-cat-cafe` folder, hook marker and `CAFE_PORT` keep their old names so existing setups keep working).

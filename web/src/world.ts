@@ -44,6 +44,8 @@ export interface Cat {
   flip: boolean; walking: boolean; working: boolean; busy: boolean;
   bubble: string | null; bubbleT: number; thought: string; thoughtT: number; pulseT: number;
   path: Pt[]; goal: PlaySpot | null; act: { spot: PlaySpot; t: number } | null; idleT: number; blinkOffset: number;
+  /** When the cat sat down to work (ms since epoch), or 0 when it is not working. */
+  workStartAt: number;
   /** Seconds the cat must stay at its post (the lead while Claude works). */
   dutyT: number;
 }
@@ -55,7 +57,7 @@ function makeCat(role: Role, fur: string, belly: string, tail: string, eye: stri
     role, x: SEAT[role][0], y: SEAT[role][1], fur, belly, tail, eye, marks,
     flip: false, walking: false, working: false, busy: false,
     bubble: null, bubbleT: 0, thought: '', thoughtT: 0, pulseT: 0,
-    path: [], goal: null, act: null, idleT: rnd(0.5, 2.5), blinkOffset: Math.random() * 4, dutyT: 0,
+    path: [], goal: null, act: null, idleT: rnd(0.5, 2.5), blinkOffset: Math.random() * 4, dutyT: 0, workStartAt: 0,
   };
 }
 
@@ -68,6 +70,14 @@ export const cats: Record<Role, Cat> = {
   tester: makeCat('tester', '#D99A5B', '#F6DDBE', '#A86A35', '#3A2A20', [[8, 4, 1, 2, '#A86A35'], [10, 4, 1, 3, '#A86A35'], [12, 4, 1, 2, '#A86A35'], [3, 15, 3, 1, '#A86A35'], [14, 15, 3, 1, '#A86A35'], [3, 17, 3, 1, '#A86A35'], [14, 17, 3, 1, '#A86A35']]),
 };
 export const allCats = () => Object.values(cats);
+
+/** "45s", "2m 10s", "1h 5m". */
+export function formatElapsed(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  return m < 60 ? `${m}m ${s % 60}s` : `${Math.floor(m / 60)}h ${m % 60}m`;
+}
 
 // ---- movement ---------------------------------------------------------------
 

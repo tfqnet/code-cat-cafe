@@ -74,7 +74,7 @@ export class Director {
       case 'order': return this.onOrder(e.text);
       case 'agent_start': return this.onAgentStart(e.role, e.detail || e.agent);
       case 'agent_end': return this.onAgentEnd(e.role, e.result ?? null);
-      case 'test_result': this.results.tester = e.result; return;
+      case 'test_result': this.results.tester = e.result; this.lastTest = { result: e.result, at: Date.now() }; this.ui.changed(); return;
       case 'tool': return this.onTool(e.role, e.tool, e.detail);
       case 'needs_you': return this.onNeedsYou(e.reason, e.message);
       case 'todos': this.todos = e.todos.map((t) => ({ ...t })); this.ui.changed(); return;
@@ -97,6 +97,7 @@ export class Director {
         this.phase = 'new order';
         say(cats.lead, 'new order!', 1.6);
         this.turnActive = true;
+        this.turnStartAt = Date.now();
         callToDuty(cats.lead, TURN_DUTY_S);
         this.ui.status(`New order${project ? ` [${project}]` : ''}: ${text}`);
         this.ui.changed();
@@ -122,7 +123,7 @@ export class Director {
       { kind: 'do', run: () => { if (this.ticket) this.ticket.holder = `cat:${role}`; } },
       { kind: 'walk', role, to: () => SEAT[role] },
       { kind: 'do', run: () => {
-        c.working = true;
+        c.working = true; c.workStartAt = Date.now();
         if (this.ticket) this.ticket.holder = deskKey(role);
         this.phase = this.ticket?.stage === 'bug' && role === 'developer' ? 'fixing' : PHASE[role];
         this.ui.status(`The ${role} is ${this.phase}`);
@@ -140,9 +141,9 @@ export class Director {
     const c = cats[role];
     const failed = () => role === 'tester' && this.results.tester === 'fail';
     this.push({ kind: 'do', run: () => {
-      c.working = false;
+      c.working = false; c.workStartAt = 0;
       if (this.ticket) this.ticket.stage = failed() ? 'bug' : STAGE_AFTER[role];
-      if (role === 'tester') say(c, failed() ? 'bug!' : 'pass!', 1.4);
+      if (role === 'tester') { say(c, failed() ? 'bug!' : 'pass!', 1.4); this.lastTest = { result: this.results.tester ?? null, at: Date.now() }; }
       this.ui.status(failed() ? 'Tests failed. The tester takes it back to the developer' : `The ${role} is done. It's on their table`);
       this.ui.changed();
     } });
@@ -239,7 +240,11 @@ export class Director {
   // ---- queue ------------------------------------------------------------------
 
   /** True from a new prompt until Claude finishes its turn: the lead stays at the counter. */
-  private turnActive = false;
+  turnActive = false;
+  /** When the current turn began (ms since epoch). Only meaningful while turnActive. */
+  turnStartAt = 0;
+  /** The last tester verdict, kept after the run so the desk can keep showing it. */
+  lastTest: { result: 'pass' | 'fail' | null; at: number } | null = null;
 
   private push(...a: Action[]) { this.queue.push(...a); }
 
