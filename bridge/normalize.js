@@ -1,10 +1,10 @@
-// Turns raw Claude Code hook payloads into small café events.
+// Turns raw Claude Code hook payloads into small office events.
 // Field names differ a little between Claude Code versions, so every
 // lookup here is defensive and falls back to sensible defaults.
 
 const AGENT_TOOLS = new Set(['Agent', 'Task']);
 
-/** Map a subagent name (e.g. "planner", "ui-designer", "qa") to a café role. */
+/** Map a subagent name (e.g. "planner", "ui-designer", "qa") to a office role. */
 export function roleFor(agentType) {
   if (!agentType) return 'lead';
   const t = String(agentType).toLowerCase();
@@ -57,7 +57,7 @@ function textOf(v) {
 /**
  * @param {object} p raw hook payload
  * @param {{readFile?: (path:string)=>string|null}} [io]
- * @returns {object[]} café events
+ * @returns {object[]} office events
  */
 export function normalize(p, io = {}) {
   if (!p || typeof p !== 'object') return [];

@@ -1,16 +1,16 @@
-# Code Cat Café 🐱☕
+# Code Cat Office 🐱☕
 
-A pixel cat café that shows your Claude Code agents at work.
+A pixel cat office that shows your Claude Code agents at work.
 
 Each Claude Code subagent is a cat with its own table. When a request comes in, the lead cat takes the order, the planner walks over to pick it up, then the designer, developer and tester each collect the ticket from the previous table, take it back to their own, and work on it. Cats with nothing to do wander around or go play in the lounge (cat tree, nap bed, food bowls, yarn ball).
 
-![Code Cat Café](docs/screenshot.png)
+![Code Cat Office](docs/screenshot.png)
 
 **What it shows**
 
 - **Who is working on what**, live: every tool call (Read, Edit, Bash, ...) appears above the cat doing it and in the activity list.
 - **The bell 🔔**: when Claude Code needs your permission or is waiting for your reply, the lead cat rings the bell, a banner appears, the tab title flashes, and (if you turn sound on) it dings.
-- **The order board**: Claude's to-do list (or your requests) in To do / Doing / Done, mirrored on the café's chalkboard.
+- **The order board**: Claude's to-do list (or your requests) in To do / Doing / Done, mirrored on the office's chalkboard.
 - **Test failures**: when the tester reports FAIL, it carries the ticket back to the developer's table.
 
 ## Quick start
@@ -37,16 +37,16 @@ Then start Claude Code in that project and ask for a feature. Want to see it mov
 ## How it works
 
 ```
-Claude Code ──hooks──▶ bridge (localhost:4777) ──live events──▶ café page
+Claude Code ──hooks──▶ bridge (localhost:4777) ──live events──▶ office page
 ```
 
 1. **Hooks.** `npm run setup` adds [Claude Code hooks](https://code.claude.com/docs/en/hooks) to your project's `.claude/settings.local.json`. On each event (prompt sent, subagent started or stopped, tool used, permission needed, turn finished) Claude Code sends the event details to the bridge with `curl`. The hooks run in the background (`async`) and never block or change what Claude does.
-2. **Bridge** (`bridge/`): a small Node server with no dependencies. It turns hook payloads into simple café events and streams them to the page. It only listens on `127.0.0.1`, so nothing leaves your machine.
-3. **Café page** (`web/`): a canvas animation that acts out the events. Events go into a queue, so the story always plays in order even when Claude is faster than the cats.
+2. **Bridge** (`bridge/`): a small Node server with no dependencies. It turns hook payloads into simple office events and streams them to the page. It only listens on `127.0.0.1`, so nothing leaves your machine.
+3. **Office page** (`web/`): a canvas animation that acts out the events. Events go into a queue, so the story always plays in order even when Claude is faster than the cats.
 
 ### Which cat is which
 
-The café maps each subagent name to a role by keywords:
+The office maps each subagent name to a role by keywords:
 
 | Subagent name contains | Cat |
 | --- | --- |
@@ -62,12 +62,12 @@ The `team-kit/` folder has a ready-made team whose names match exactly. `npm run
 
 | Command | What it does |
 | --- | --- |
-| `npm start` | Build the page and open the café at http://localhost:4777 |
-| `npm run setup -- <project>` | Add café hooks to one project |
+| `npm start` | Build the page and open the office at http://localhost:4777 |
+| `npm run setup -- <project>` | Add office hooks to one project |
 | `npm run setup -- <project> --team` | Same, plus copy the agent team and `CLAUDE.md` |
-| `npm run setup -- --global` | Add café hooks for every project (`~/.claude/settings.json`) |
-| `npm run setup -- <project> --remove` | Take the café hooks out again (add `--global` for the global ones) |
-| `npm run sample` | Play a sample session into the café (no Claude Code needed) |
+| `npm run setup -- --global` | Add office hooks for every project (`~/.claude/settings.json`) |
+| `npm run setup -- <project> --remove` | Take the office hooks out again (add `--global` for the global ones) |
+| `npm run sample` | Play a sample session into the office (no Claude Code needed) |
 | `npm run dev` | Development mode with hot reload (page on http://localhost:5173) |
 | `npm test` | Bridge unit tests |
 

@@ -139,8 +139,8 @@ function frame(now: number) {
   // Flash the tab title while Claude is waiting, so you notice from another tab.
   if (director.waiting) {
     titleFlash += dt;
-    document.title = Math.floor(titleFlash * 1.5) % 2 ? '🔔 Claude needs you' : 'Code Cat Café';
-  } else if (titleFlash) { titleFlash = 0; document.title = 'Code Cat Café'; }
+    document.title = Math.floor(titleFlash * 1.5) % 2 ? '🔔 Claude needs you' : 'Code Cat Office';
+  } else if (titleFlash) { titleFlash = 0; document.title = 'Code Cat Office'; }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

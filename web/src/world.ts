@@ -1,4 +1,4 @@
-// The café world: layout, cats, movement and idle behaviour.
+// The office world: layout, cats, movement and idle behaviour.
 // Grid units: the floor is 12 x 8 tiles. x < 7 is the work area, x > 7 the lounge.
 
 export type Role = 'lead' | 'planner' | 'designer' | 'developer' | 'tester';

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { normalize, roleFor, readResult } from './normalize.js';
 import { addHooks, removeHooks, EVENTS } from './setup-hooks.js';
 
-test('roleFor maps agent names to café roles', () => {
+test('roleFor maps agent names to office roles', () => {
   assert.equal(roleFor('planner'), 'planner');
   assert.equal(roleFor('ui-designer'), 'designer');
   assert.equal(roleFor('qa-tester'), 'tester');

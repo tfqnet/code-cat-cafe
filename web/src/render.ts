@@ -1,4 +1,4 @@
-// Draws the café: isometric floor, walls, furniture, the lounge and the cats.
+// Draws the office: isometric floor, walls, furniture, the lounge and the cats.
 // Everything is flat-coloured canvas shapes, so there are no image assets.
 
 import { allCats, cats, DESKS, PLAY, TREE, type Cat, type Desk, type Role, type Stage } from './world';
@@ -118,7 +118,7 @@ export class Renderer {
     const k = this.ctx;
     this.rr(10, 10, 116, 24, 8, '#6B4430');
     k.fillStyle = '#F6E7CF'; k.font = `500 13px ${this.font}`; k.textAlign = 'center'; k.textBaseline = 'middle';
-    k.fillText('code cat café', 68, 22.5);
+    k.fillText('code cat office', 68, 22.5);
   }
 
   private boardColumns() {

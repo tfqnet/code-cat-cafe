@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Adds (or removes) the Code Cat Café hooks in a Claude Code settings file.
+// Adds (or removes) the Code Cat Office hooks in a Claude Code settings file.
 //
 //   npm run setup -- ~/code/my-app            hooks for one project (.claude/settings.local.json)
 //   npm run setup -- ~/code/my-app --team     also copy the planner/designer/developer/tester team
@@ -111,11 +111,11 @@ function main() {
   const next = remove ? removeHooks(settings) : addHooks(settings);
   fs.writeFileSync(file, JSON.stringify(next, null, 2) + '\n');
 
-  console.log(`\n${remove ? 'Removed' : 'Added'} café hooks ${remove ? 'from' : 'in'} ${file}`);
+  console.log(`\n${remove ? 'Removed' : 'Added'} office hooks ${remove ? 'from' : 'in'} ${file}`);
   if (team && projectDir && !remove) { console.log('\nTeam:'); copyTeam(projectDir); }
   if (!remove) {
     console.log('\nNext:');
-    console.log('  1. Keep the café running (npm start in the code-cat-cafe folder)');
+    console.log('  1. Keep the office running (npm start in the code-cat-cafe folder)');
     console.log(`  2. Start a new Claude Code session${projectDir ? ` in ${projectDir}` : ''}`);
     console.log('  3. Ask for a feature and watch the cats\n');
   }

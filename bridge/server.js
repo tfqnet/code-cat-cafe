@@ -1,7 +1,7 @@
-// Code Cat Café bridge.
+// Code Cat Office bridge.
 // Claude Code hooks POST their payloads to /hook. The bridge turns them into
-// small café events and streams them to the browser over Server-Sent Events.
-// It also serves the built café page from web/dist.
+// small office events and streams them to the browser over Server-Sent Events.
+// It also serves the built office page from web/dist.
 //
 // No dependencies: plain Node 20+.
 
@@ -22,7 +22,7 @@ const RAW_LOG = path.join(LOG_DIR, 'hook-events.jsonl');
 const MAX_LOG_BYTES = 2 * 1024 * 1024;
 
 const clients = new Set();
-const recent = []; // last café events, replayed to a newly opened page
+const recent = []; // last office events, replayed to a newly opened page
 const MAX_RECENT = 200;
 
 function logRaw(payload) {
@@ -82,7 +82,7 @@ const TYPES = {
 function serveStatic(req, res) {
   if (!fs.existsSync(DIST)) {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('The café page is not built yet. Run "npm start" (or "npm run build") in the code-cat-cafe folder.');
+    res.end('The office page is not built yet. Run "npm start" (or "npm run build") in the code-cat-cafe folder.');
     return;
   }
   const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
@@ -114,7 +114,7 @@ const server = http.createServer((req, res) => {
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`\nPort ${PORT} is already in use. Is the café already running in another terminal?`);
+    console.error(`\nPort ${PORT} is already in use. Is the office already running in another terminal?`);
     console.error(`Close it, or run with another port: CAFE_PORT=4778 npm start\n`);
     process.exit(1);
   }
@@ -123,7 +123,7 @@ server.on('error', (err) => {
 
 server.listen(PORT, HOST, () => {
   const url = `http://localhost:${PORT}`;
-  console.log(`\n  🐱 Code Cat Café is open at ${url}`);
+  console.log(`\n  🐱 Code Cat Office is open at ${url}`);
   console.log(`  Listening for Claude Code hooks at ${url}/hook`);
   console.log(`  Raw hook payloads are logged to ${RAW_LOG}\n`);
   if (process.argv.includes('--open')) {

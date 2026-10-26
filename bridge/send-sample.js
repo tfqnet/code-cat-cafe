@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Plays a recorded-style Claude Code session into the bridge, so you can see
-// the café react without running Claude Code.  Usage: npm run sample
+// the office react without running Claude Code.  Usage: npm run sample
 
 const PORT = Number(process.env.CAFE_PORT || 4777);
 const URL_ = `http://localhost:${PORT}/hook`;
@@ -117,7 +117,7 @@ async function main() {
     try {
       await fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...base, ...step }) });
     } catch {
-      console.error(`\nCould not reach the café at ${URL_}. Start it first with: npm start\n`);
+      console.error(`\nCould not reach the office at ${URL_}. Start it first with: npm start\n`);
       process.exit(1);
     }
     process.stdout.write('.');

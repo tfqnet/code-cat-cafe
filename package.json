@@ -2,7 +2,7 @@
   "name": "code-cat-cafe",
   "version": "0.1.0",
   "private": true,
-  "description": "A pixel cat café that shows your Claude Code agents at work.",
+  "description": "A pixel cat office that shows your Claude Code agents at work.",
   "type": "module",
   "engines": {
     "node": ">=20"

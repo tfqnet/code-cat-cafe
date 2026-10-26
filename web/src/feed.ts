@@ -1,4 +1,4 @@
-// Where café events come from: the live bridge, or a built-in demo.
+// Where office events come from: the live bridge, or a built-in demo.
 
 import type { CafeEvent } from './director';
 import type { Role } from './world';
@@ -27,7 +27,7 @@ export function startFeed(onEvent: (e: CafeEvent) => void, onMode: (m: FeedMode)
   const es = new EventSource('/events');
   es.onopen = () => {
     clearTimeout(fallback);
-    if (demoStop) { location.reload(); return; } // start the live café from a clean slate
+    if (demoStop) { location.reload(); return; } // start the live office from a clean slate
     everLive = true;
     onMode('live');
   };

@@ -1,4 +1,4 @@
-// The director turns café events (from the bridge or the demo) into a queue
+// The director turns office events (from the bridge or the demo) into a queue
 // of things the cats act out: walk here, pick up the ticket, work, hand over.
 // Actions run one after another, so the story always reads in order even when
 // Claude Code is faster than the cats.
