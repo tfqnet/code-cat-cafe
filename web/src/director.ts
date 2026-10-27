@@ -43,6 +43,8 @@ export interface UiHooks {
 
 /** The lead stays at the counter this long after the last sign of work, in case no Stop event arrives (e.g. Esc). */
 const TURN_DUTY_S = 90;
+/** A cat with a running agent stays at its table; released when the agent ends. */
+const HOLD_AT_SEAT_S = 3600;
 
 export class Director {
   ticket: Ticket | null = null;
@@ -113,6 +115,9 @@ export class Director {
     this.ended.delete(role);
     delete this.results[role];
     const c = cats[role];
+    // Cats whose turn in the story has not come yet (parallel agents are acted out one by one)
+    // wait at their own table instead of wandering off to the lounge.
+    callToDuty(c, HOLD_AT_SEAT_S);
     this.push(
       { kind: 'do', run: () => {
         interrupt(c); c.busy = true; say(c, '!', 0.8);
@@ -156,11 +161,14 @@ export class Director {
         ); } },
       );
     }
-    this.push({ kind: 'do', run: () => { c.busy = false; c.idleT = 0.5 + Math.random(); } });
+    this.push({ kind: 'do', run: () => { c.busy = false; c.dutyT = 0; c.idleT = 0.5 + Math.random(); } });
   }
 
   private onTool(role: Role, tool: string, detail?: string) {
     this.clearWaiting();
+    // After a page refresh the replay window may have dropped this cat's start event: a tool call from a
+    // cat that is not known to be working means it is, so seat it at its table.
+    if (role !== 'lead' && cats[role] && !this.active.has(role) && !this.ended.has(role)) this.onAgentStart(role);
     const c = cats[role] ?? cats.lead;
     c.thought = tool; c.thoughtT = 3;
     if (role === 'lead' && this.active.size === 0) c.pulseT = 2.5;
