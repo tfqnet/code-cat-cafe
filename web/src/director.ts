@@ -91,7 +91,7 @@ export class Director {
       { kind: 'do', run: () => {
         for (const o of this.orders) if (o.state === 'doing') o.state = 'done';
         this.orders.unshift({ id: this.nextOrderId++, text, state: 'doing', project });
-        this.orders = this.orders.slice(0, 8);
+        this.orders = this.orders.slice(0, 30);
         this.todos = [];
         this.ticket = { holder: 'counter', stage: 'order' };
         this.phase = 'new order';
@@ -166,7 +166,7 @@ export class Director {
     if (role === 'lead' && this.active.size === 0) c.pulseT = 2.5;
     if (role === 'lead') callToDuty(c, this.turnActive ? TURN_DUTY_S : 8);
     this.feed.unshift({ role, text: detail ? `${tool} · ${detail}` : tool, at: Date.now(), project: this.cur });
-    this.feed = this.feed.slice(0, 8);
+    this.feed = this.feed.slice(0, 60);
     this.ui.changed();
   }
 

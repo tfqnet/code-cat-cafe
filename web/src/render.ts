@@ -1,7 +1,7 @@
 // Draws the office: isometric floor, walls, furniture, the lounge and the cats.
 // Everything is flat-coloured canvas shapes, so there are no image assets.
 
-import { allCats, cats, DESKS, FLOOR_D, formatElapsed, PLAY, TREE, type Cat, type Desk, type Role, type Stage } from './world';
+import { allCats, cats, COFFEE, DESKS, FLOOR_D, formatElapsed, PLAY, TREE, type Cat, type Desk, type Role, type Stage } from './world';
 import type { Director } from './director';
 
 export const W = 460, H = 335;
@@ -200,6 +200,22 @@ export class Renderer {
     this.ell(q[0] + sway, q[1] + 16, 3, 3, '#F28B7D');
     this.box(TREE.x, TREE.y, 1.1, 1.1, 5, 46, '#9C88C9', '#7E6AAB', '#6E5A9B');
   }
+  private coffee() {
+    const { x, y, w, d } = COFFEE;
+    this.box(x, y, w, d, 12, 0, '#B88758', '#7A5038', '#8E5E40'); // little table
+    this.box(x, y, w * 0.7, d * 0.7, 22, 12, '#7C8590', '#4F5862', '#5E6873'); // machine
+    const f = g2s(x, y + d * 0.35); // front face of the machine
+    this.rr(f[0] - 7, f[1] - 30, 14, 5, 1, '#2E3238'); // spout
+    this.ell(f[0] + 5, f[1] - 22, 1.6, 1.6, '#E5534B'); // power light
+    this.rr(f[0] - 4, f[1] - 17, 8, 6, 2, '#F6E7CF'); // cup
+    this.rr(f[0] - 3, f[1] - 17, 6, 2, 1, '#6B4430'); // coffee
+    // steam
+    const k = this.ctx; k.strokeStyle = 'rgba(255,255,255,0.7)'; k.lineWidth = 1;
+    for (const o of [-2, 2]) {
+      const s = Math.sin(this.T * 2 + o) * 1.5;
+      k.beginPath(); k.moveTo(f[0] + o, f[1] - 19); k.quadraticCurveTo(f[0] + o + s, f[1] - 23, f[0] + o - s, f[1] - 27); k.stroke();
+    }
+  }
   private bed() { const p = g2s(11, 6.3); this.ell(p[0], p[1], 17, 8, '#D97A66'); this.ell(p[0], p[1] - 2, 12, 5, '#F6C9B8'); }
   private bowls() {
     const a = g2s(8.3, 7.2), b = g2s(8.9, 7.5);
@@ -314,7 +330,7 @@ export class Renderer {
     for (const y of [0, 1, 2, 5, 6, 7, 8, 9]) items.push({ k: 7 + y + 0.5, f: () => this.divider(y) });
     items.push(
       { k: 10.4, f: () => { const a = up(g2s(7, 3), 26), b = up(g2s(7, 5), 26); this.ctx.strokeStyle = '#C99A6B'; this.ctx.lineWidth = 3; this.ctx.beginPath(); this.ctx.moveTo(a[0], a[1]); this.ctx.lineTo(b[0], b[1]); this.ctx.stroke(); } },
-      { k: TREE.x + TREE.y, f: () => this.tree() }, { k: 17.2, f: () => this.bed() }, { k: 15.6, f: () => this.bowls() }, { k: 14.7, f: () => this.ball() },
+      { k: COFFEE.x + COFFEE.y, f: () => this.coffee() }, { k: TREE.x + TREE.y, f: () => this.tree() }, { k: 17.2, f: () => this.bed() }, { k: 15.6, f: () => this.bowls() }, { k: 14.7, f: () => this.ball() },
     );
     for (const c of allCats()) items.push({ k: c.act?.spot.n === 'tree' ? TREE.x + TREE.y + 0.5 : c.x + c.y + 0.01, f: () => this.cat(c) });
     // Floor labels go down first so cats walk over them.
@@ -332,7 +348,9 @@ export class Renderer {
   /** Which cat (if any) is under a canvas point, for tap-to-inspect. */
   catAt(clientX: number, clientY: number): Role | null {
     const r = this.canvas.getBoundingClientRect();
-    const x = ((clientX - r.left) / r.width) * W, y = ((clientY - r.top) / r.height) * H;
+    // The canvas is letterboxed (object-fit: contain), so work out the drawn area.
+    const s = Math.min(r.width / W, r.height / H);
+    const x = (clientX - r.left - (r.width - W * s) / 2) / s, y = (clientY - r.top - (r.height - H * s) / 2) / s;
     let best: Role | null = null, bestD = 22;
     for (const c of allCats()) {
       const [px, py] = this.catPos(c);

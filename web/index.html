@@ -20,29 +20,33 @@
         </div>
       </header>
 
-      <section class="stage card">
-        <canvas id="cafe" aria-label="Animated cat office showing what each Claude Code agent is doing"></canvas>
-        <p id="status" class="status" aria-live="polite">Opening the office…</p>
-      </section>
+      <div class="layout">
+        <section class="stage card">
+          <div class="canvas-wrap">
+            <canvas id="cafe" aria-label="Animated cat office showing what each Claude Code agent is doing"></canvas>
+          </div>
+          <p id="status" class="status" aria-live="polite">Opening the office…</p>
+        </section>
 
-      <section id="bell" class="bell" hidden>
-        <div>
-          <strong>🔔 <span id="bell-title">Claude needs you</span></strong>
-          <p id="bell-text"></p>
-        </div>
-        <button id="bell-dismiss" class="btn" type="button">Dismiss</button>
-      </section>
+        <aside class="side">
+          <section id="bell" class="bell" hidden>
+            <div>
+              <strong>🔔 <span id="bell-title">Claude needs you</span></strong>
+              <p id="bell-text"></p>
+            </div>
+            <button id="bell-dismiss" class="btn" type="button">Dismiss</button>
+          </section>
 
-      <section class="grid">
-        <div class="card">
-          <h2 id="board-title">Order board</h2>
-          <div id="board" class="board"></div>
-        </div>
-        <div class="card">
-          <h2>What the cats are doing</h2>
-          <ul id="activity" class="activity"></ul>
-        </div>
-      </section>
+          <div class="card panel">
+            <h2 id="board-title">Order board</h2>
+            <div id="board" class="board scroll"></div>
+          </div>
+          <div class="card panel">
+            <h2>What the cats are doing</h2>
+            <ul id="activity" class="activity scroll"></ul>
+          </div>
+        </aside>
+      </div>
 
       <p id="demo-hint" class="hint" hidden>
         This is the demo. To see your real Claude Code session, run <code>npm start</code> in the code-cat-cafe folder

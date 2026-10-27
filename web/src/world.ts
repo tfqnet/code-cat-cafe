@@ -29,6 +29,8 @@ export const PICKUP: Record<string, Pt> = {
 };
 
 export const TREE = { x: 10.2, y: 1.6 };
+/** Coffee machine on the back wall, between the window and the lounge. */
+export const COFFEE = { x: 6.0, y: 0.5, w: 0.9, d: 0.7 };
 export interface PlaySpot { n: 'tree' | 'bed' | 'bowl' | 'ball'; at: Pt; dur: [number, number]; occ: Role | null }
 export const PLAY: PlaySpot[] = [
   { n: 'tree', at: [9.4, 2.5], dur: [1.4, 2.4], occ: null },
@@ -38,7 +40,7 @@ export const PLAY: PlaySpot[] = [
 ];
 const OBSTACLES: [number, number, number, number][] = [
   ...DESKS.map((d) => [d.cx, d.cy, d.w, d.d] as [number, number, number, number]),
-  [TREE.x, TREE.y, 1.2, 1.2], [11, 6.3, 1, 1],
+  [TREE.x, TREE.y, 1.2, 1.2], [11, 6.3, 1, 1], [COFFEE.x, COFFEE.y, COFFEE.w, COFFEE.d],
 ];
 
 export interface Cat {
