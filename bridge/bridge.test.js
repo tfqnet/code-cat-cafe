@@ -117,3 +117,10 @@ test('events carry the project name from the working directory', () => {
   assert.equal(e.project, 'my-app');
   assert.equal(e.session, 'abcdef12');
 });
+
+test('Agent tool returning is not the end of the agent (background subagents)', () => {
+  const post = normalize({ hook_event_name: 'PostToolUse', tool_name: 'Agent', tool_input: { subagent_type: 'designer' }, tool_response: 'Async agent launched' });
+  assert.deepEqual(post, []);
+  const [end] = normalize({ hook_event_name: 'SubagentStop', agent_type: 'designer', agent_id: '1' });
+  assert.equal(end.type, 'agent_end'); assert.equal(end.role, 'designer');
+});

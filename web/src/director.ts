@@ -64,6 +64,8 @@ export class Director {
   private current: Action | null = null;
   private nextOrderId = 1;
   private ringT = 0;
+  /** The lead's turn ended while cats were still working: serve the order when the last one is done. */
+  private serveWhenIdle = false;
 
   constructor(private ui: UiHooks) {}
 
@@ -141,6 +143,8 @@ export class Director {
   private onAgentEnd(role: Role, result: 'pass' | 'fail' | null) {
     if (!this.active.has(role)) return;
     this.active.delete(role);
+    const serveNow = this.serveWhenIdle && this.active.size === 0;
+    if (serveNow) this.serveWhenIdle = false;
     if (result) this.results[role] = result;
     this.ended.add(role);
     const c = cats[role];
@@ -162,6 +166,7 @@ export class Director {
       );
     }
     this.push({ kind: 'do', run: () => { c.busy = false; c.dutyT = 0; c.idleT = 0.5 + Math.random(); } });
+    if (serveNow) this.onTurnDone();
   }
 
   private onTool(role: Role, tool: string, detail?: string) {
@@ -203,6 +208,8 @@ export class Director {
   }
 
   private onTurnDone() {
+    // Background subagents keep working after the lead's turn ends; the order isn't served yet.
+    if (this.active.size > 0) { this.serveWhenIdle = true; this.turnActive = false; return; }
     this.push({ kind: 'do', run: () => {
       this.turnActive = false;
       cats.lead.dutyT = Math.min(cats.lead.dutyT, 3);

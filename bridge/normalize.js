@@ -111,11 +111,10 @@ export function normalize(p, io = {}) {
       break;
 
     case 'PostToolUse':
-      if (AGENT_TOOLS.has(tool)) {
-        const role = roleFor(input.subagent_type || input.agent_type || input.description);
-        const result = role === 'tester' ? readResult(textOf(p.tool_response)) : null;
-        push({ type: 'agent_end', role, agent: input.subagent_type || 'agent', result });
-      } else if ((tool === 'Write' || tool === 'Edit') && /test-report\.md$/.test(input.file_path || '')) {
+      // The Agent tool's own result is not the end of the agent: Claude Code now runs subagents in
+      // the background, so the tool returns as soon as the agent starts. SubagentStop is the real end.
+      if (AGENT_TOOLS.has(tool)) break;
+      if ((tool === 'Write' || tool === 'Edit') && /test-report\.md$/.test(input.file_path || '')) {
         const r = readResult(input.content ?? input.new_string);
         if (r) push({ type: 'test_result', result: r });
       }
